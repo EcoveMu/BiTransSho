@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "即時語音翻譯字幕",
+  "version": "2.2.0",
+  "description": "即時翻譯會議語音並顯示多語言字幕",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "desktopCapture"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*",
+    "https://teams.microsoft.com/*",
+    "https://teams.live.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; media-src 'self' blob: data:"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": [
+        "shared/SpeechEngine.js",
+        "shared/AudioManager.js",
+        "shared/SettingsManager.js",
+        "shared/SubtitleCore.js",
+        "shared/HistoryCore.js",
+        "content.js"
+      ],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "即時語音翻譯"
+  },
+  "commands": {
+    "toggle-recording": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+R",
+        "mac": "Command+Shift+R"
+      },
+      "description": "開始/停止錄音"
+    },
+    "open-subtitle-window": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+W",
+        "mac": "Command+Shift+W"
+      },
+      "description": "開啟獨立字幕視窗"
+    },
+    "toggle-smart-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "開啟/關閉智能整理面板"
+    }
+  }
+} 

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams 音頻診斷工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .diagnostic-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .diagnostic-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title .icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .diagnostic-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .diagnostic-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .diagnostic-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .device-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .device-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .device-item:last-child {
+            border-bottom: none;
+        }
+
+        .teams-tips {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .teams-tips h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .teams-tips ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .teams-tips li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .teams-tips li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+
+        .quick-fix {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .quick-fix h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .fix-steps {
+            list-style: decimal;
+            padding-left: 20px;
+        }
+
+        .fix-steps li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagnostic-container">
+        <div class="header">
+            <h1>🏢 Teams 音頻診斷工具</h1>
+            <p>專門解決 Teams 會議中字幕無聲音的問題</p>
+        </div>
+
+        <!-- 環境檢測 -->
+        <div class="diagnostic-section">
+            <div class="section-title">
+                <span class="icon">🌐</span>
+                環境檢測
+            </div>
+            <button class="diagnostic-button" id="checkEnvironment">檢測 Teams 環境</button>
+            <div class="result" id="environmentResult"></div>
+        </div>
+
+        <!-- 權限檢測 -->
+        <div class="diagnostic-section">
+            <div class="section-title">
+                <span class="icon">🔐</span>
+                麥克風權限檢測
+            </div>
+            <button class="diagnostic-button" id="checkPermissions">檢查麥克風權限</button>
+            <div class="result" id="permissionResult"></div>
+        </div>
+
+        <!-- 設備檢測 -->
+        <div class="diagnostic-section">
+            <div class="section-title">
+                <span class="icon">🎤</span>
+                音頻設備檢測
+            </div>
+            <button class="diagnostic-button" id="checkDevices">掃描音頻設備</button>
+            <button class="diagnostic-button" id="testMicrophone">測試麥克風</button>
+            <div class="result" id="deviceResult"></div>
+            <div class="progress-bar" id="micTestProgress" style="display: none;">
+                <div class="progress-fill" id="micTestFill"></div>
+            </div>
+        </div>
+
+        <!-- Teams 衝突檢測 -->
+        <div class="diagnostic-section">
+            <div class="section-title">
+                <span class="icon">📞</span>
+                Teams 衝突檢測
+            </div>
+            <button class="diagnostic-button" id="checkTeamsConflict">檢測音頻衝突</button>
+            <div class="result" id="conflictResult"></div>
+        </div>
+
+        <!-- 一鍵診斷 -->
+        <div class="diagnostic-section">
+            <div class="section-title">
+                <span class="icon">🔧</span>
+                完整診斷
+            </div>
+            <button class="diagnostic-button" id="runFullDiagnostic">執行完整診斷</button>
+            <div class="result" id="fullDiagnosticResult"></div>
+        </div>
+
+        <!-- Teams 使用建議 -->
+        <div class="teams-tips">
+            <h3>🏢 Teams 環境最佳實踐</h3>
+            <ul>
+                <li>在加入會議前先啟動字幕功能</li>
+                <li>使用獨立字幕視窗避免音頻衝突</li>
+                <li>確保 Teams 和瀏覽器都有麥克風權限</li>
+                <li>定期更新瀏覽器和 Teams 應用</li>
+                <li>避免同時使用多個音頻應用</li>
+            </ul>
+        </div>
+
+        <!-- 快速修復方案 -->
+        <div class="quick-fix">
+            <h4>🚀 常見問題快速修復</h4>
+            <ol class="fix-steps">
+                <li>重新載入頁面 (Ctrl+F5)</li>
+                <li>檢查瀏覽器地址欄的麥克風圖標</li>
+                <li>確認麥克風未被其他應用佔用</li>
+                <li>嘗試退出並重新加入 Teams 會議</li>
+                <li>使用快捷鍵 Ctrl+Shift+W 開啟獨立字幕視窗</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        class TeamsAudioDiagnostic {
+            constructor() {
+                this.setupEventListeners();
+                this.isTeamsEnvironment = false;
+                this.audioDevices = [];
+                this.diagnosticResults = {};
+            }
+
+            setupEventListeners() {
+                document.getElementById('checkEnvironment').addEventListener('click', () => this.checkEnvironment());
+                document.getElementById('checkPermissions').addEventListener('click', () => this.checkPermissions());
+                document.getElementById('checkDevices').addEventListener('click', () => this.checkDevices());
+                document.getElementById('testMicrophone').addEventListener('click', () => this.testMicrophone());
+                document.getElementById('checkTeamsConflict').addEventListener('click', () => this.checkTeamsConflict());
+                document.getElementById('runFullDiagnostic').addEventListener('click', () => this.runFullDiagnostic());
+            }
+
+            showResult(elementId, message, type = 'info') {
+                const resultElement = document.getElementById(elementId);
+                resultElement.className = `result ${type}`;
+                resultElement.innerHTML = message;
+                resultElement.style.display = 'block';
+            }
+
+            async checkEnvironment() {
+                const button = document.getElementById('checkEnvironment');
+                button.disabled = true;
+                button.textContent = '檢測中...';
+
+                try {
+                    // 檢測是否在 Teams 環境
+                    const url = window.location.href;
+                    const userAgent = navigator.userAgent;
+                    
+                    this.isTeamsEnvironment = url.includes('teams.microsoft.com') || 
+                                            url.includes('teams.live.com') ||
+                                            document.title.includes('Teams');
+
+                    let result = '';
+                    if (this.isTeamsEnvironment) {
+                        result = '✅ 檢測到 Teams 環境<br>';
+                        result += `📍 當前 URL: ${url}<br>`;
+                        result += `🌐 瀏覽器: ${userAgent.includes('Chrome') ? 'Chrome' : 'Other'}<br>`;
+                        
+                        // 檢測 Teams 會議狀態
+                        const meetingElements = document.querySelectorAll('[data-tid*="call"], [aria-label*="會議"], [aria-label*="通話"]');
+                        if (meetingElements.length > 0) {
+                            result += '📞 檢測到活躍的 Teams 會議';
+                        } else {
+                            result += '💤 目前未在 Teams 會議中';
+                        }
+                        
+                        this.showResult('environmentResult', result, 'success');
+                    } else {
+                        result = '⚠️ 未檢測到 Teams 環境<br>';
+                        result += '建議在 Teams 頁面中使用此診斷工具';
+                        this.showResult('environmentResult', result, 'warning');
+                    }
+
+                    this.diagnosticResults.environment = this.isTeamsEnvironment;
+
+                } catch (error) {
+                    this.showResult('environmentResult', `❌ 環境檢測失敗: ${error.message}`, 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '檢測 Teams 環境';
+                }
+            }
+
+            async checkPermissions() {
+                const button = document.getElementById('checkPermissions');
+                button.disabled = true;
+                button.textContent = '檢查中...';
+
+                try {
+                    let result = '';
+
+                    // 檢查 Permissions API 支援
+                    if (navigator.permissions) {
+                        try {
+                            const micPermission = await navigator.permissions.query({ name: 'microphone' });
+                            result += `🔐 麥克風權限狀態: ${micPermission.state}<br>`;
+                            
+                            if (micPermission.state === 'granted') {
+                                result += '✅ 麥克風權限已授予';
+                                this.diagnosticResults.permission = 'granted';
+                            } else if (micPermission.state === 'prompt') {
+                                result += '🔔 需要用戶確認麥克風權限';
+                                this.diagnosticResults.permission = 'prompt';
+                            } else {
+                                result += '❌ 麥克風權限被拒絕';
+                                this.diagnosticResults.permission = 'denied';
+                            }
+                        } catch (permError) {
+                            result += `⚠️ 無法查詢權限狀態: ${permError.message}<br>`;
+                            result += '嘗試直接測試麥克風存取...';
+                        }
+                    }
+
+                    // 直接測試麥克風存取
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        result += '<br>✅ 麥克風存取測試成功';
+                        stream.getTracks().forEach(track => track.stop());
+                        this.diagnosticResults.microphoneAccess = true;
+                        this.showResult('permissionResult', result, 'success');
+                    } catch (accessError) {
+                        result += `<br>❌ 麥克風存取失敗: ${accessError.name}`;
+                        if (accessError.name === 'NotAllowedError') {
+                            result += '<br>🔧 解決方案: 點擊網址列的鎖頭圖標，允許麥克風權限';
+                        } else if (accessError.name === 'NotFoundError') {
+                            result += '<br>🔧 解決方案: 檢查麥克風設備是否正確連接';
+                        }
+                        this.diagnosticResults.microphoneAccess = false;
+                        this.showResult('permissionResult', result, 'error');
+                    }
+
+                } catch (error) {
+                    this.showResult('permissionResult', `❌ 權限檢查失敗: ${error.message}`, 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '檢查麥克風權限';
+                }
+            }
+
+            async checkDevices() {
+                const button = document.getElementById('checkDevices');
+                button.disabled = true;
+                button.textContent = '掃描中...';
+
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                    
+                    this.audioDevices = audioInputs;
+                    
+                    let result = `🎤 找到 ${audioInputs.length} 個音頻輸入設備:<br>`;
+                    
+                    if (audioInputs.length === 0) {
+                        result += '❌ 未找到任何音頻輸入設備';
+                        this.showResult('deviceResult', result, 'error');
+                    } else {
+                        result += '<div class="device-list">';
+                        audioInputs.forEach((device, index) => {
+                            const label = device.label || `設備 ${index + 1}`;
+                            result += `<div class="device-item">📱 ${label}</div>`;
+                        });
+                        result += '</div>';
+                        
+                        this.diagnosticResults.audioDevices = audioInputs.length;
+                        this.showResult('deviceResult', result, 'success');
+                    }
+
+                } catch (error) {
+                    this.showResult('deviceResult', `❌ 設備掃描失敗: ${error.message}`, 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '掃描音頻設備';
+                }
+            }
+
+            async testMicrophone() {
+                const button = document.getElementById('testMicrophone');
+                const progressBar = document.getElementById('micTestProgress');
+                const progressFill = document.getElementById('micTestFill');
+                
+                button.disabled = true;
+                button.textContent = '測試中...';
+                progressBar.style.display = 'block';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    // 創建音頻分析器
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const analyser = audioContext.createAnalyser();
+                    const microphone = audioContext.createMediaStreamSource(stream);
+                    
+                    microphone.connect(analyser);
+                    analyser.fftSize = 256;
+                    
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+                    
+                    let maxVolume = 0;
+                    let hasSignal = false;
+                    let testDuration = 5000; // 5秒測試
+                    let startTime = Date.now();
+                    
+                    const checkAudio = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min((elapsed / testDuration) * 100, 100);
+                        progressFill.style.width = progress + '%';
+                        
+                        if (elapsed < testDuration) {
+                            analyser.getByteFrequencyData(dataArray);
+                            
+                            let sum = 0;
+                            for (let i = 0; i < bufferLength; i++) {
+                                sum += dataArray[i];
+                            }
+                            const average = sum / bufferLength;
+                            maxVolume = Math.max(maxVolume, average);
+                            
+                            if (average > 10) {
+                                hasSignal = true;
+                            }
+                            
+                            requestAnimationFrame(checkAudio);
+                        } else {
+                            // 測試完成
+                            stream.getTracks().forEach(track => track.stop());
+                            audioContext.close();
+                            
+                            let result = '';
+                            if (hasSignal) {
+                                result = `✅ 麥克風測試成功!<br>📊 最大音量: ${maxVolume.toFixed(1)}<br>🎤 設備工作正常`;
+                                this.diagnosticResults.microphoneTest = 'success';
+                                this.showResult('deviceResult', result, 'success');
+                            } else {
+                                result = `⚠️ 未檢測到音頻訊號<br>📊 最大音量: ${maxVolume.toFixed(1)}<br>🔧 請檢查麥克風是否靜音或音量太低`;
+                                this.diagnosticResults.microphoneTest = 'no_signal';
+                                this.showResult('deviceResult', result, 'warning');
+                            }
+                            
+                            progressBar.style.display = 'none';
+                            button.disabled = false;
+                            button.textContent = '測試麥克風';
+                        }
+                    };
+                    
+                    checkAudio();
+                    
+                } catch (error) {
+                    this.showResult('deviceResult', `❌ 麥克風測試失敗: ${error.message}`, 'error');
+                    progressBar.style.display = 'none';
+                    button.disabled = false;
+                    button.textContent = '測試麥克風';
+                }
+            }
+
+            async checkTeamsConflict() {
+                const button = document.getElementById('checkTeamsConflict');
+                button.disabled = true;
+                button.textContent = '檢測中...';
+
+                try {
+                    let result = '';
+                    let conflictLevel = 'none';
+
+                    // 檢查 Teams 音頻元素
+                    const audioElements = document.querySelectorAll('audio, video');
+                    const teamsAudioElements = document.querySelectorAll('audio[autoplay], video[autoplay]');
+                    
+                    result += `🔊 頁面音頻元素: ${audioElements.length}<br>`;
+                    result += `📹 Teams 自動播放元素: ${teamsAudioElements.length}<br>`;
+
+                    // 檢查 Teams 會議狀態
+                    const meetingIndicators = document.querySelectorAll('[data-tid*="call"], [aria-label*="會議"], [aria-label*="通話"]');
+                    if (meetingIndicators.length > 0) {
+                        result += '📞 檢測到活躍的 Teams 會議<br>';
+                        conflictLevel = 'medium';
+                    }
+
+                    // 檢查麥克風是否被佔用
+                    try {
+                        const testStream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: { sampleRate: 8000 } 
+                        });
+                        result += '✅ 麥克風可正常存取<br>';
+                        testStream.getTracks().forEach(track => track.stop());
+                    } catch (testError) {
+                        if (testError.name === 'NotReadableError') {
+                            result += '⚠️ 麥克風可能被 Teams 佔用<br>';
+                            conflictLevel = 'high';
+                        } else {
+                            result += `❌ 麥克風存取異常: ${testError.name}<br>`;
+                            conflictLevel = 'high';
+                        }
+                    }
+
+                    // 提供解決建議
+                    if (conflictLevel === 'high') {
+                        result += '<br>🔧 建議解決方案:<br>';
+                        result += '• 暫時退出 Teams 會議<br>';
+                        result += '• 重新載入頁面<br>';
+                        result += '• 使用獨立字幕視窗模式';
+                        this.showResult('conflictResult', result, 'error');
+                    } else if (conflictLevel === 'medium') {
+                        result += '<br>💡 注意事項:<br>';
+                        result += '• 在會議期間可能有音頻衝突<br>';
+                        result += '• 建議在加入會議前啟動字幕';
+                        this.showResult('conflictResult', result, 'warning');
+                    } else {
+                        result += '✅ 未檢測到明顯的音頻衝突';
+                        this.showResult('conflictResult', result, 'success');
+                    }
+
+                    this.diagnosticResults.teamsConflict = conflictLevel;
+
+                } catch (error) {
+                    this.showResult('conflictResult', `❌ 衝突檢測失敗: ${error.message}`, 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '檢測音頻衝突';
+                }
+            }
+
+            async runFullDiagnostic() {
+                const button = document.getElementById('runFullDiagnostic');
+                button.disabled = true;
+                button.textContent = '執行完整診斷...';
+
+                try {
+                    // 依次執行所有診斷
+                    await this.checkEnvironment();
+                    await this.checkPermissions();
+                    await this.checkDevices();
+                    await this.checkTeamsConflict();
+
+                    // 生成綜合報告
+                    let report = '<h4>📋 診斷報告</h4>';
+                    
+                    // 環境狀況
+                    if (this.diagnosticResults.environment) {
+                        report += '✅ Teams 環境正常<br>';
+                    } else {
+                        report += '⚠️ 非 Teams 環境<br>';
+                    }
+
+                    // 權限狀況
+                    if (this.diagnosticResults.microphoneAccess) {
+                        report += '✅ 麥克風權限正常<br>';
+                    } else {
+                        report += '❌ 麥克風權限問題<br>';
+                    }
+
+                    // 設備狀況
+                    if (this.diagnosticResults.audioDevices > 0) {
+                        report += `✅ 檢測到 ${this.diagnosticResults.audioDevices} 個音頻設備<br>`;
+                    } else {
+                        report += '❌ 未檢測到音頻設備<br>';
+                    }
+
+                    // 衝突狀況
+                    const conflictLevel = this.diagnosticResults.teamsConflict;
+                    if (conflictLevel === 'none') {
+                        report += '✅ 無音頻衝突<br>';
+                    } else if (conflictLevel === 'medium') {
+                        report += '⚠️ 檢測到潛在衝突<br>';
+                    } else {
+                        report += '❌ 檢測到嚴重衝突<br>';
+                    }
+
+                    // 綜合建議
+                    report += '<br><h4>🎯 建議操作</h4>';
+                    
+                    if (!this.diagnosticResults.microphoneAccess) {
+                        report += '1. 🔐 首先解決麥克風權限問題<br>';
+                    }
+                    
+                    if (conflictLevel === 'high') {
+                        report += '2. 🔧 解決 Teams 音頻衝突<br>';
+                    }
+                    
+                    if (this.diagnosticResults.environment && this.diagnosticResults.microphoneAccess) {
+                        report += '3. 🚀 可以嘗試啟動字幕功能<br>';
+                    }
+                    
+                    report += '4. 💡 如仍有問題，使用獨立字幕視窗模式';
+
+                    this.showResult('fullDiagnosticResult', report, 
+                        this.diagnosticResults.microphoneAccess ? 'success' : 'warning');
+
+                } catch (error) {
+                    this.showResult('fullDiagnosticResult', `❌ 完整診斷失敗: ${error.message}`, 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '執行完整診斷';
+                }
+            }
+        }
+
+        // 初始化診斷工具
+        document.addEventListener('DOMContentLoaded', () => {
+            new TeamsAudioDiagnostic();
+        });
+    </script>
+</body>
+</html>

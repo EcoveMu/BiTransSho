@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>即時語音翻譯</title>
+  <style>
+    body {
+      width: 350px;
+      min-height: 400px;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      margin: 5px 0 0 0;
+    }
+
+    .control-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary.recording {
+      background: #f44336;
+      animation: pulse 1.5s infinite;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #eeeeee;
+    }
+
+    .btn-warning {
+      background: #ff9800;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #f57c00;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+    }
+
+    .status {
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+
+    .status.inactive {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .status.active {
+      background: #e8f5e8;
+      color: #2e7d32;
+    }
+
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .settings-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .language-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .language-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .language-item:hover {
+      background: #f9f9f9;
+    }
+
+    .language-item.selected {
+      background: #e3f2fd;
+      border-color: #2196f3;
+    }
+
+    .language-item input[type="checkbox"] {
+      margin-right: 8px;
+      width: auto;
+    }
+
+    .language-item label {
+      font-size: 12px;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .save-btn:hover {
+      background: #5a6fd8;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .collapsible {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapsible::after {
+      content: '▼';
+      float: right;
+      transition: transform 0.3s ease;
+    }
+
+    .collapsible.collapsed::after {
+      transform: rotate(-90deg);
+    }
+
+    .collapsible-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-content.collapsed {
+      max-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎤 即時語音翻譯</h1>
+      <p>多語言會議字幕助手</p>
+    </div>
+
+    <div class="control-section">
+      <div class="status inactive" id="status">
+        準備開始語音識別
+      </div>
+      
+      <div class="control-buttons">
+        <button class="btn btn-primary" id="toggleBtn">🎤 網頁字幕</button>
+        <button class="btn btn-success" id="openWindowBtn">🪟 獨立字幕視窗</button>
+      </div>
+      
+      <div class="info-section" style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 8px; border-left: 4px solid #2196f3;">
+        <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px; display: flex; align-items: center;">
+          <span style="margin-right: 6px;">💡</span>功能選擇說明
+        </div>
+        <div style="color: #424242; font-size: 13px; line-height: 1.4;">
+          🎤 <strong>網頁字幕</strong>：監聽當前網頁聲音（Teams會議、YouTube等）<br>
+          🪟 <strong>獨立視窗</strong>：完整功能，適合實體會議和多功能操作<br>
+          ⚙️ <strong>統一設定</strong>：兩種模式共享相同的設定系統
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="control-buttons" style="margin-top: 15px;">
+        <button class="btn btn-secondary" id="settingsBtn" style="width: 100%;">
+          ⚙️ 設定
+        </button>
+      </div>
+      
+      <div class="info-section" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px;">
+        <div style="color: #6c757d; text-align: center;">
+          💡 點擊「設定」開啟完整設定界面<br>
+          所有語音識別、翻譯、音頻設定都在獨立視窗中進行
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      版本 1.0.0 | 支援多語言即時翻譯
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

@@ -1,0 +1,48 @@
+{
+  "name": "realtime-speech-translation-chrome-extension",
+  "version": "1.0.0",
+  "description": "即時語音翻譯字幕 Chrome 插件 - 支援多語言會議翻譯和字幕顯示",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo '構建完成 - 請直接載入到Chrome擴展程式'",
+    "dev": "echo '開發模式 - 請在Chrome中載入未封裝的擴展程式'",
+    "test": "echo '測試 - 請在Chrome中測試擴展程式功能'",
+    "package": "echo '打包 - 請使用Chrome擴展程式開發者工具打包'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "speech-recognition",
+    "translation",
+    "subtitles",
+    "realtime",
+    "multilingual",
+    "microsoft-translate",
+    "openai",
+    "voice-to-text"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/realtime-speech-translation-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/realtime-speech-translation-extension/issues"
+  },
+  "homepage": "https://github.com/your-username/realtime-speech-translation-extension#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "files": [
+    "manifest.json",
+    "background.js",
+    "content.js",
+    "popup.html",
+    "popup.js",
+    "styles.css",
+    "icons/",
+    "README.md"
+  ]
+} 
